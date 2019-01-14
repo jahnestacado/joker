@@ -1,0 +1,24 @@
+{
+    "namespace": "com.jahnestacado.model",
+    "type": "record",
+    "name": "User",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "id", "type": "long"},
+        {"name": "location", "type": ["null", "string"], "default": ""},
+        {"name": "description", "type": ["null", "string"], "default": ""},
+        {"name": "translator_type", "type": ["null", "string"], "default": ""},
+        {"name": "protected", "type": "boolean"},
+        {"name": "verified", "type": "boolean"},
+        {"name": "followers_count", "type": "int"},
+        {"name": "friends_count", "type": "int"},
+        {"name": "listed_count", "type": "int"},
+        {"name": "statuses_count", "type": "int"},
+        {"name": "favourites_count", "type": "int"},
+        {"name": "created_at", "type": "string"},
+        {"name": "lang", "type": "string"},
+        {"name": "following", "type": "boolean"},
+        {"name": "follow_request_sent", "type": "boolean"},
+        {"name": "notifications", "type": "boolean"}
+    ]
+}
