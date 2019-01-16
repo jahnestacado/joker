@@ -8,27 +8,29 @@ class Config() {
   private val twitterConfig = ConfigFactory.load().getConfig("twitter")
   private val kafkaProducerConfig = ConfigFactory.load().getConfig("kafka-producer")
 
-   case class TwitterConfig(
-                                    apiKey: String,
-                                    apiSecret: String,
-                                    accessKey: String,
-                                    accessSecret: String,
-                                    tracks: List[String]
-                                  )
+  case class TwitterConfig(
+                            apiKey: String,
+                            apiSecret: String,
+                            accessKey: String,
+                            accessSecret: String,
+                            tracks: List[String]
+                          )
 
- case class KafkaProducer(
-                                    bootstrapServers: String,
-                                    schemaRegistryUrl: String,
-                                    topic: String,
-                                    acks: String
-                                  )
+  case class KafkaProducer(
+                            bootstrapServers: String,
+                            schemaRegistryUrl: String,
+                            topic: String,
+                            acks: String
+                          )
 
   val twitter = TwitterConfig(
     apiKey = Properties.envOrElse("TWITTER_API_KEY", twitterConfig.getString("consumer.key")),
     apiSecret = Properties.envOrElse("TWITTER_API_SECRET", twitterConfig.getString("consumer.secret")),
     accessKey = Properties.envOrElse("TWITTER_ACCESS_KEY", twitterConfig.getString("access.key")),
-    accessSecret = Properties.envOrElse("TWITTER_ACCESS_Secret", twitterConfig.getString("access.secret")),
-    tracks = twitterConfig.getStringList("tracks").asScala.toList
+    accessSecret = Properties.envOrElse("TWITTER_ACCESS_SECRET", twitterConfig.getString("access.secret")),
+    tracks = if (!Properties.envOrElse("TWITTER_TRACKS", "").isEmpty) {
+      sys.env("TWITTER_TRACKS").split(",").toList
+    } else twitterConfig.getStringList("tracks").asScala.toList
   )
 
   val kafkaProducer = KafkaProducer(

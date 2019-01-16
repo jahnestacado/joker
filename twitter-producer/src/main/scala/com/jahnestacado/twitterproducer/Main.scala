@@ -8,11 +8,11 @@ object Main extends App with LazyLogging {
   val config: Config = new Config()
   val client = TwitterStreamingClient()
   val tracks = config.twitter.tracks
+  println("tracks", tracks)
   val producer = new TweetKafkaProducer(config)
 
   client.filterStatuses(tracks = tracks, stall_warnings = true) {
     case tweet: Tweet => {
-      println("Receiving...", tweet.text)
       producer.send(tweet)
     }
   }

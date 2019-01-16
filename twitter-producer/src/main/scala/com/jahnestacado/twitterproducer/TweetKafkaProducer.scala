@@ -10,10 +10,8 @@ import org.apache.kafka.common.serialization.StringSerializer
 class TweetKafkaProducer(config: Config) {
   private val shemaRegistryUrl: String = config.kafkaProducer.schemaRegistryUrl
   private val topicName: String = config.kafkaProducer.topic
-  private val boostrapServers: String =  config.kafkaProducer.bootstrapServers
+  private val boostrapServers: String = config.kafkaProducer.bootstrapServers
   private val props = new Properties()
-
-  println(shemaRegistryUrl, topicName, boostrapServers)
 
   props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, boostrapServers)
   props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
@@ -23,27 +21,10 @@ class TweetKafkaProducer(config: Config) {
 
   private val producer = new KafkaProducer[String, Tweet](props)
 
-  class RecordCallback extends Callback {
-
-    override def onCompletion(metadata: RecordMetadata, ex: Exception) = {
-      if (ex != null) {
-        handleException(ex)
-      } else {
-        println(s"Successfully sent message : $metadata")
-      }
-    }
-
-    private def handleException(exception: Exception): Unit = {
-      println("Error while attempting to send message", exception)
-    }
-  }
-
   def send(tweet: TweetOrig): Unit = {
     val avroTweet = TweetToAvroMapper.mapTweet(tweet)
-    val record : ProducerRecord[String, Tweet] =  new ProducerRecord(topicName, avroTweet)
-    println("Send?????????????????")
-    producer.send(record, new RecordCallback())
-    println("the end??----")
+    val record: ProducerRecord[String, Tweet] = new ProducerRecord(topicName, avroTweet)
+    producer.send(record)
   }
 
 
