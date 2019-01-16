@@ -1,0 +1,22 @@
+{
+    "namespace": "com.jahnestacado.cmc.model",
+    "type": "record",
+    "name": "CMCFeed",
+    "fields": [
+          {"name": "id", "type": "int"},
+          {"name": "name", "type": "string"},
+          {"name": "circulating_supply", "type": "long"},
+          {"name": "total_supply", "type": "long"},
+          {"name": "max_supply", "type": ["null", "long"], "default": 0},
+          {"name": "num_market_pairs", "type": "long"},
+          {"name": "cmc_rank", "type": "int"},
+          {"name": "last_updated", "type": "string"},
+          {"name": "currency", "type": "string"},
+          {"name": "price", "type": "double"},
+          {"name": "volume_24h", "type": "double"},
+          {"name": "percent_change_1h", "type": "double"},
+          {"name": "percent_change_24h", "type": "double"},
+          {"name": "percent_change_7h", "type": "double"},
+          {"name": "market_cap", "type": "double"}
+    ]
+}
