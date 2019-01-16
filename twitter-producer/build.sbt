@@ -2,9 +2,13 @@ name := "twitter-producer"
 
 version := "0.1"
 
-enablePlugins(JavaAppPackaging)
+// Define structure inside package/tarball
+topLevelDirectory := None
+name in Universal := name.value
 
-resolvers += Resolver.sonatypeRepo("releases")
+enablePlugins(JavaAppPackaging, UniversalPlugin)
+
+resolvers += "confluent" at "http://packages.confluent.io/maven/"
 
 libraryDependencies ++= Seq(
   "com.danielasfregola" %% "twitter4s" % "5.5",
