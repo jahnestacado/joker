@@ -8,6 +8,9 @@ services:
     environment:
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+    user: 1000:1000
+    volumes:
+      - /home/jahn/shared/zookeeper/1:/data 
 
   zoo2:
     image: zookeeper
@@ -17,6 +20,9 @@ services:
     environment:
       ZOO_MY_ID: 2
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
+    user: 1000:1000
+    volumes:
+      - /home/jahn/shared/zookeeper/2:/data 
 
   zoo3:
     image: zookeeper
@@ -26,10 +32,12 @@ services:
     environment:
       ZOO_MY_ID: 3
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
+    user: 1000:1000
+    volumes:
+      - /home/jahn/shared/zookeeper/3:/data 
 
   kafka-1:
     image: zeelos/cp-kafka:5.0.0-arm64v8
-    user: 1000:1000
     depends_on:
       - zoo1
       - zoo2
@@ -41,12 +49,12 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:19092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+    user: 1000:1000
     volumes:
       - /home/jahn/shared/kafka/1/:/var/lib/kafka/data
 
   kafka-2:
     image: zeelos/cp-kafka:5.0.0-arm64v8
-    user: 1000:1000
     depends_on:
       - zoo1
       - zoo2
@@ -58,6 +66,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+    user: 1000:1000
     volumes:
       - /home/jahn/shared/kafka/2/:/var/lib/kafka/data
       
@@ -81,6 +90,7 @@ services:
     image: postgres
     ports:
       - "5432:5432"
+    user: 1000:1000
     volumes:
       - /home/jahn/shared/postgres:/var/lib/postgresql/data
       
