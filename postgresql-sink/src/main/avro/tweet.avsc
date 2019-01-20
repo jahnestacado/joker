@@ -1,0 +1,22 @@
+{
+    "namespace": "com.jahnestacado.model",
+    "type": "record",
+    "name": "Tweet",
+    "fields": [
+        {"name": "created_at", "type": "string"},
+        {"name": "id", "type": "long"},
+        {"name": "text", "type": "string"},
+        {"name": "in_reply_to_status_id", "type": ["null", "long"], "default": 0},
+        {"name": "in_reply_to_user_id", "type": ["null", "long"], "default": 0},
+        {"name": "is_quote_status", "type": "boolean"},
+        {"name": "retweet_count", "type": "long", "default": 0},
+        {"name": "favorite_count", "type": "long", "default": 0},
+        {"name": "hashtags", "type": ["null", { "type": "array", "items": "string"}]},
+        {"name": "users_mentions_by", "type": ["null", { "type": "array", "items": "long"}]},
+        {"name": "favorited", "type": "boolean"},
+        {"name": "retweeted", "type": "boolean"},
+        {"name": "filter_level", "type": ["null", "string"]},
+        {"name": "lang", "type": ["null", "string"]},
+        {"name": "user", "type": ["null", "com.jahnestacado.model.User"]}
+    ]
+}
