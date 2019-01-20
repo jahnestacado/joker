@@ -2,6 +2,8 @@ name := "twitter-producer"
 
 version := "0.1"
 
+resolvers += "confluent" at "http://packages.confluent.io/maven/"
+
 // Define structure inside package/tarball
 topLevelDirectory := None
 name in Universal := name.value
