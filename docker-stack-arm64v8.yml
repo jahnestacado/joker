@@ -117,3 +117,14 @@ services:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: schema-registry:8085
       TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
+      
+  postgresql-sink:
+    image: jahnestacado/postgresql-sink
+    depends_on:
+        - zoo1
+        - zoo2
+        - zoo3
+        - kafka-1
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: 192.168.178.24:19092
+      KAFKA_SCHEMA_REGISTRY_URL: schema-registry:8085

@@ -16,7 +16,7 @@ object Main extends App {
   implicit val connectionPool: Jdbc3PoolingDataSource = {
     val source = new Jdbc3PoolingDataSource()
     source.setDataSourceName("A Data Source")
-    source.setServerName("192.168.178.45")
+    source.setServerName("192.168.178.24")
     source.setPortNumber(5432)
     source.setDatabaseName("postgres")
     source.setUser("postgres")
