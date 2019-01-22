@@ -8,7 +8,9 @@ services:
     environment:
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
-    user: 1000:1000
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-1]
     volumes:
       - /home/jahn/shared/zookeeper/1:/data 
 
@@ -20,7 +22,9 @@ services:
     environment:
       ZOO_MY_ID: 2
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
-    user: 1000:1000
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-2]
     volumes:
       - /home/jahn/shared/zookeeper/2:/data 
 
@@ -32,7 +36,9 @@ services:
     environment:
       ZOO_MY_ID: 3
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
-    user: 1000:1000
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-3]
     volumes:
       - /home/jahn/shared/zookeeper/3:/data 
 
@@ -49,7 +55,10 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:19092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-    user: 1000:1000
+      KAFKA_HEAP_OPTS: -Xmx256M -Xms128M
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-1]
     volumes:
       - /home/jahn/shared/kafka/1/:/var/lib/kafka/data
 
@@ -66,9 +75,32 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-    user: 1000:1000
+      KAFKA_HEAP_OPTS: -Xmx256M -Xms128M
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-2]
     volumes:
       - /home/jahn/shared/kafka/2/:/var/lib/kafka/data
+      
+  kafka-3:
+    image: zeelos/cp-kafka:5.0.0-arm64v8
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    ports:
+    - "39092:39092"
+    environment:
+      KAFKA_BROKER_ID: 3    
+      KAFKA_ZOOKEEPER_CONNECT: zoo3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:39092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_HEAP_OPTS: -Xmx256M -Xms128M
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-4]
+    volumes:
+      - /home/jahn/shared/kafka/3/:/var/lib/kafka/data
       
   schema-registry:
     image: zeelos/cp-schema-registry:5.0.0-arm64v8
@@ -90,41 +122,42 @@ services:
     image: postgres
     ports:
       - "5432:5432"
-    user: 1000:1000
-    volumes:
-      - /home/jahn/shared/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      #    volumes:
+      #  - /home/jahn/shared/postgres:/var/lib/postgresql/data
       
   coinmarketcap-producer:
     image: jahnestacado/coinmarketcap-producer
     depends_on:
         - zoo1
-        - zoo2
         - zoo3
         - kafka-1
     environment:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: schema-registry:8085
-      CMC_COIN_IDS: 1,2,1831,1027,52
+      # CMC_COIN_IDS: "1,2,1831,1027,52"
 
   twitter-producer:
     image: jahnestacado/twitter-producer
     depends_on:
-        - zoo1
-        - zoo2
-        - zoo3
-        - kafka-1
+        - kafka-2
     environment:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: schema-registry:8085
-      TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
+      #      TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-4]
       
   postgresql-sink:
     image: jahnestacado/postgresql-sink
     depends_on:
-        - zoo1
-        - zoo2
-        - zoo3
-        - kafka-1
+        - postgres
     environment:
       KAFKA_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_SCHEMA_REGISTRY_URL: schema-registry:8085
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-4]
+
