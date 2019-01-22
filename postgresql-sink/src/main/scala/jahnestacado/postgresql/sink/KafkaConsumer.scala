@@ -45,6 +45,7 @@ class KafkaConsumer[T](topic: String, connectionPool: Jdbc3PoolingDataSource, Pe
     Consumer.committableSource(consumerSettings, Subscriptions.topics(topic))
       .mapAsync(2) { msg =>
         val connection = connectionPool.getConnection()
+        println("Record", msg.record.value())
         Persistor.insert(connection, msg.record.value())
           .map(_ => {
             connection.close()

@@ -22,6 +22,7 @@ object Main extends App {
     source.setUser("postgres")
     source.setPassword("postgres")
     source.setMaxConnections(10)
+    println("Connected to postgres")
     source
   }
 
