@@ -13,6 +13,7 @@ object Main extends App with LazyLogging {
 
   client.filterStatuses(tracks = tracks, stall_warnings = true) {
     case tweet: Tweet => {
+      println("Received tweet", tweet.text)
       producer.send(tweet)
     }
   }
