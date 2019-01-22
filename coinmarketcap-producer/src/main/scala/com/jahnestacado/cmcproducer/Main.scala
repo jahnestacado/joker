@@ -39,8 +39,8 @@ object Main extends App {
         implicit val rootFormat = jsonFormat1(Root)
         Unmarshal(res.entity).to[String].map(f = (json: String) => {
           val feeds = json.parseJson.convertTo[Root]
+          println("Sending feeds", feeds)
           feeds.data.values.foreach(producer.send(_))
-
         })
       }
       case Failure(err) => println(err)
