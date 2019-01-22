@@ -52,15 +52,15 @@ services:
     - "19092:19092"
     environment:
       KAFKA_BROKER_ID: 1    
-      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:19092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_HEAP_OPTS: -Xmx256M -Xms128M
+    volumes:
+      - /home/jahn/shared/kafka/1/:/var/lib/kafka/data
     deploy:
       placement:
         constraints: [node.hostname == minion-1]
-    volumes:
-      - /home/jahn/shared/kafka/1/:/var/lib/kafka/data
 
   kafka-2:
     image: zeelos/cp-kafka:5.0.0-arm64v8
@@ -72,15 +72,15 @@ services:
     - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 2    
-      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_HEAP_OPTS: -Xmx256M -Xms128M
+    volumes:
+      - /home/jahn/shared/kafka/2/:/var/lib/kafka/data
     deploy:
       placement:
         constraints: [node.hostname == minion-2]
-    volumes:
-      - /home/jahn/shared/kafka/2/:/var/lib/kafka/data
       
   kafka-3:
     image: zeelos/cp-kafka:5.0.0-arm64v8
@@ -92,15 +92,15 @@ services:
     - "39092:39092"
     environment:
       KAFKA_BROKER_ID: 3    
-      KAFKA_ZOOKEEPER_CONNECT: zoo3:2181
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183, 
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:39092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_HEAP_OPTS: -Xmx256M -Xms128M
-    deploy:
-      placement:
-        constraints: [node.hostname == minion-4]
     volumes:
       - /home/jahn/shared/kafka/3/:/var/lib/kafka/data
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-3]
       
   schema-registry:
     image: zeelos/cp-schema-registry:5.0.0-arm64v8
@@ -109,6 +109,8 @@ services:
         - zoo2
         - zoo3
         - kafka-1
+        - kafka-2
+        - kafka-3
     ports:
       - "8085:8085"
     environment:
@@ -131,21 +133,29 @@ services:
     image: jahnestacado/coinmarketcap-producer
     depends_on:
         - zoo1
+        - zoo2
         - zoo3
         - kafka-1
+        - kafka-2
+        - kafka-3
     environment:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: schema-registry:8085
-      # CMC_COIN_IDS: "1,2,1831,1027,52"
+      CMC_COIN_IDS: "1,2,1831,1027,52"
 
   twitter-producer:
     image: jahnestacado/twitter-producer
     depends_on:
+        - zoo1
+        - zoo2
+        - zoo3
+        - kafka-1
         - kafka-2
+        - kafka-3
     environment:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: schema-registry:8085
-      #      TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
+      TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
     deploy:
       placement:
         constraints: [node.hostname == minion-4]
@@ -153,7 +163,12 @@ services:
   postgresql-sink:
     image: jahnestacado/postgresql-sink
     depends_on:
-        - postgres
+        - zoo1
+        - zoo2
+        - zoo3
+        - kafka-1
+        - kafka-2
+        - kafka-3
     environment:
       KAFKA_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_SCHEMA_REGISTRY_URL: schema-registry:8085
