@@ -21,10 +21,20 @@ class TweetKafkaProducer(config: Config) {
 
   private val producer = new KafkaProducer[String, Tweet](props)
 
+  class OnDone extends Callback {
+
+    override def onCompletion(metadata: RecordMetadata, exception: Exception): Unit = {
+      println(s"onCompletion - ${metadata}, ${exception.getMessage}")
+      println(exception)
+      println("")
+    }
+
+  }
+
   def send(tweet: TweetOrig): Unit = {
     val avroTweet = TweetToAvroMapper.mapTweet(tweet)
     val record: ProducerRecord[String, Tweet] = new ProducerRecord(topicName, avroTweet)
-    producer.send(record)
+    producer.send(record, new OnDone)
   }
 
 
