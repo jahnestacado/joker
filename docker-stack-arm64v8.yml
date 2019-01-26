@@ -135,8 +135,9 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: postgres
-      #    volumes:
-      #  - /home/jahn/shared/postgres:/var/lib/postgresql/data
+      POSTGRES_USER: postgres
+    volumes:
+      - /home/jahn/shared/postgres:/var/lib/postgresql/data
       
   coinmarketcap-producer:
     image: jahnestacado/coinmarketcap-producer
@@ -178,12 +179,13 @@ services:
         - kafka-1
         - kafka-2
         - kafka-3
+        - postgres
     environment:
       KAFKA_CONSUMER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
       KAFKA_SCHEMA_REGISTRY_URL: schema-registry:8085
       POSTGRESQL_HOST: 192.168.178.24
       POSTGRESQL_PORT: 5432
     deploy:
-      placement:
-        constraints: [node.hostname == minion-4]
+      mode: replicated
+      replicas: 2
 
