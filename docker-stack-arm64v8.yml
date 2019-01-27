@@ -44,6 +44,7 @@ services:
 
   kafka-1:
     image: zeelos/cp-kafka:5.0.0-arm64v8
+    hostname: kafka-1
     depends_on:
       - zoo1
       - zoo2
@@ -53,7 +54,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1    
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:19092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:19092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
@@ -67,6 +68,7 @@ services:
 
   kafka-2:
     image: zeelos/cp-kafka:5.0.0-arm64v8
+    hostname: kafka-2
     depends_on:
       - zoo1
       - zoo2
@@ -76,7 +78,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 2    
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
@@ -90,6 +92,7 @@ services:
       
   kafka-3:
     image: zeelos/cp-kafka:5.0.0-arm64v8
+    hostname: kafka-3
     depends_on:
       - zoo1
       - zoo2
@@ -99,7 +102,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 3    
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183, 
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.178.24:39092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:39092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 2
       KAFKA_DEFAULT_REPLICATION_FACTOR: 2
@@ -109,10 +112,11 @@ services:
       - /home/jahn/shared/kafka/3/:/var/lib/kafka/data
     deploy:
       placement:
-        constraints: [node.hostname == minion-3]
+        constraints: [node.hostname == minion-4]
       
   schema-registry:
     image: zeelos/cp-schema-registry:5.0.0-arm64v8
+    hostname: schema-registry
     depends_on:
         - zoo1
         - zoo2
@@ -129,8 +133,9 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8085
       SCHEMA_REGISTRY_DEBUG: "true"
       
-  postgres:
+  postgresql:
     image: postgres
+    hostname: postgresql
     ports:
       - "5432:5432"
     environment:
@@ -149,7 +154,7 @@ services:
         - kafka-2
         - kafka-3
     environment:
-      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:39092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: schema-registry:8085
       CMC_COIN_IDS: "1,2,1831,1027,52"
 
@@ -179,11 +184,11 @@ services:
         - kafka-1
         - kafka-2
         - kafka-3
-        - postgres
+        - postgresql
     environment:
-      KAFKA_CONSUMER_BOOTSTRAP_SERVERS: 192.168.178.24:19092
+      KAFKA_CONSUMER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:39092
       KAFKA_SCHEMA_REGISTRY_URL: schema-registry:8085
-      POSTGRESQL_HOST: 192.168.178.24
+      POSTGRESQL_HOST: postgresql
       POSTGRESQL_PORT: 5432
     deploy:
       mode: replicated
