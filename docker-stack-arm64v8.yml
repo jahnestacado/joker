@@ -155,7 +155,7 @@ services:
         - kafka-3
     environment:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:39092
-      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: https://schema-registry:8085
+      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://schema-registry:8085
       CMC_COIN_IDS: "1,2,1831,1027,52"
 
   twitter-producer:
@@ -169,7 +169,7 @@ services:
         - kafka-3
     environment:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:39092
-      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: https://schema-registry:8085
+      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://schema-registry:8085
       TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
     deploy:
       placement:
@@ -187,7 +187,7 @@ services:
         - postgresql
     environment:
       KAFKA_CONSUMER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:39092
-      KAFKA_SCHEMA_REGISTRY_URL: https://schema-registry:8085
+      KAFKA_SCHEMA_REGISTRY_URL: http://schema-registry:8085
       POSTGRESQL_HOST: postgresql
       POSTGRESQL_PORT: 5432
     deploy:
