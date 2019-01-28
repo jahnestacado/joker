@@ -24,17 +24,18 @@ class TweetKafkaProducer(config: Config) {
   class OnDone extends Callback {
 
     override def onCompletion(metadata: RecordMetadata, exception: Exception): Unit = {
-      println(s"onCompletion - ${metadata}, ${exception.getMessage}")
-      println(exception)
-      println("")
+      if (exception != null) {
+        println(exception)
+      } else {
+        println(s"onCompletion - ${metadata}")
+      }
     }
-
   }
 
   def send(tweet: TweetOrig): Unit = {
     val avroTweet = TweetToAvroMapper.mapTweet(tweet)
     val record: ProducerRecord[String, Tweet] = new ProducerRecord(topicName, avroTweet)
-    producer.send(record, new OnDone)
+      producer.send(record, new OnDone)
   }
 
 

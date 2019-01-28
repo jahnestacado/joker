@@ -1,8 +1,10 @@
 package com.jahnestacado.twitterproducer
 
+import ch.qos.logback.classic.{Level, Logger}
 import com.danielasfregola.twitter4s.TwitterStreamingClient
 import com.danielasfregola.twitter4s.entities.Tweet
 import com.typesafe.scalalogging.LazyLogging
+import org.slf4j.LoggerFactory
 
 object Main extends App with LazyLogging {
   LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger].setLevel(Level.TRACE)
