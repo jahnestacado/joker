@@ -4,17 +4,19 @@ import java.sql.Connection
 
 import akka.Done
 import com.jahnestacado.model.Tweet
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
-object TweetPersistor extends Persistor[Tweet] {
+object TweetPersistor extends Persistor[Tweet] with LazyLogging{
   private val tableName = "Tweets"
 
-  //  created_at timestamptz
+  val topic: String = "tweet-stream"
 
 
   def createTable(connection: Connection) = {
+    logger.info(s"Initializing table $tableName")
     val preparedStatement = connection.prepareStatement(
       s"""CREATE TABLE IF NOT EXISTS ${tableName} (
       insertion_time timestamptz DEFAULT current_timestamp,

@@ -2,13 +2,14 @@ package jahnestacado.postgresql.sink.rdbms
 
 import java.sql.Connection
 
+import com.typesafe.scalalogging.LazyLogging
 import jahnestacado.postgresql.sink.Config
 import org.postgresql.jdbc3.Jdbc3PoolingDataSource
 
-class ConnectionPool(config: Config) {
-  private var connection: Connection = null
+class ConnectionPool(config: Config) extends LazyLogging {
+  private var connection: Option[Connection] = None
 
-  private def initializeConnection(): Connection = {
+  private def initializeConnection(): Option[Connection] = {
     val source = new Jdbc3PoolingDataSource()
     source.setServerName(config.postgresql.host)
     source.setPortNumber(config.postgresql.port)
@@ -16,22 +17,23 @@ class ConnectionPool(config: Config) {
     source.setUser(config.postgresql.user)
     source.setPassword(config.postgresql.password)
     source.setMaxConnections(config.postgresql.maxConnections)
-    source.getConnection()
+    logger.info(s"Established connection with postgres instance ${config.postgresql.host}:${config.postgresql.port}")
+    Some(source.getConnection())
   }
 
-  def get(): Connection = {
-    if (connection == null) {
+  def get(): Option[Connection] = {
+    if (connection.isEmpty) {
       connection = initializeConnection()
       connection
     } else {
       try {
-        connection.getClientInfo()
+        connection.get.getClientInfo()
         connection
       } catch {
-        case e: Exception =>
-          println(e.getMessage)
-          connection.close()
-          connection = null
+        case ex: Exception =>
+          logger.error(ex.getMessage())
+          connection.get.close()
+          connection = None
           connection
       }
     }

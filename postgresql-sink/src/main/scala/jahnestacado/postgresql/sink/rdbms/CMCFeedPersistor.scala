@@ -4,17 +4,18 @@ import java.sql.Connection
 
 import akka.Done
 import com.jahnestacado.cmc.model.CMCFeed
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
-object CMCFeedPersistor extends Persistor[CMCFeed] {
+object CMCFeedPersistor extends Persistor[CMCFeed] with LazyLogging {
   private val tableName = "CMCFeeds"
 
-  //  created_at timestamptz
-
+  val topic: String = "cmc-feed"
 
   def createTable(connection: Connection) = {
+    logger.info(s"Initializing table $tableName")
     val preparedStatement = connection.prepareStatement(
       s"""CREATE TABLE IF NOT EXISTS ${tableName} (
       insertion_time timestamptz DEFAULT current_timestamp,

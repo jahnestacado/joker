@@ -2,21 +2,17 @@ package jahnestacado.postgresql.sink
 
 import akka.kafka.ConsumerMessage.CommittableOffsetBatch
 import akka.kafka.scaladsl.Consumer
-import akka.kafka.{CommitterSettings, ConsumerSettings, Subscriptions}
+import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{RestartSource, Sink}
-import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroDeserializer, KafkaAvroDeserializerConfig}
-import jahnestacado.postgresql.sink.Main.system
+import com.typesafe.scalalogging.LazyLogging
 import jahnestacado.postgresql.sink.rdbms.{ConnectionPool, Persistor}
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.serialization.{Deserializer, StringDeserializer}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class KafkaConsumer[T](topic: String, connectionPool: ConnectionPool, Persistor: Persistor[T], config: Config)
-                      (implicit executionContext: ExecutionContext, materializer: Materializer) {
+class KafkaConsumer[T](connectionPool: ConnectionPool, config: Config, Persistor: Persistor[T])
+                      (implicit executionContext: ExecutionContext, materializer: Materializer) extends LazyLogging{
 
   val consumerSettings: ConsumerSettings[String, T] = config.kafkaConsumer.getConsumerSettings[T]
   val restartSource = RestartSource.onFailuresWithBackoff(
@@ -24,12 +20,11 @@ class KafkaConsumer[T](topic: String, connectionPool: ConnectionPool, Persistor:
     maxBackoff = 2.minutes,
     randomFactor = 0.4
   ) { () =>
-    Consumer.committableSource(consumerSettings, Subscriptions.topics(topic))
+    Consumer.committableSource(consumerSettings, Subscriptions.topics(Persistor.topic))
       .mapAsync(2) { msg =>
         var connection = connectionPool.get()
-        println("Record", msg.record.value())
 
-        Persistor.insert(connection, msg.record.value())
+        Persistor.insert(connection.get, msg.record.value())
           .map(_ => {
             msg.committableOffset
           })
