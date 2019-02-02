@@ -9,11 +9,10 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.concurrent.{ExecutionContext, Future}
 
 
-object TweetPersistor extends Persistor[Tweet] with LazyLogging{
+object TweetPersistor extends Persistor[Tweet] with LazyLogging {
   private val tableName = "Tweets"
 
   val topic: String = "tweet-stream"
-
 
   def createTable(connection: Connection) = {
     logger.info(s"Initializing table $tableName")
