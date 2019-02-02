@@ -26,6 +26,7 @@ class ConnectionPool(config: Config) extends LazyLogging {
 
   def get(): Option[Connection] = {
     if (connection.isEmpty) {
+      logger.info("Initiating postgres connection")
       initializeConnection() match {
         case Success(conn) =>
           logger.info(s"Established connection with postgres instance" +

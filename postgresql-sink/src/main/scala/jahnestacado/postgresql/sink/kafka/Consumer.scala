@@ -1,7 +1,7 @@
 package jahnestacado.postgresql.sink.kafka
 
 import akka.kafka.ConsumerMessage.CommittableOffsetBatch
-import akka.kafka.scaladsl.Consumer
+import akka.kafka.scaladsl.{Consumer => KafkaConsumer}
 import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{RestartSource, Sink}
@@ -21,7 +21,7 @@ class Consumer[T](connectionPool: ConnectionPool, config: Config, Persistor: Per
     maxBackoff = 2.minutes,
     randomFactor = 0.4
   ) { () =>
-    Consumer.committableSource(consumerSettings, Subscriptions.topics(Persistor.topic))
+    KafkaConsumer.committableSource(consumerSettings, Subscriptions.topics(Persistor.topic))
       .mapAsync(2) { msg =>
         var connection = connectionPool.get()
         logger.debug(s"Received record ${msg.record.value()}")
