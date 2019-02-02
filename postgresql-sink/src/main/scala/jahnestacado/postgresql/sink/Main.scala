@@ -11,19 +11,19 @@ object Main extends App {
   implicit val system = ActorSystem.create(config.kafkaConsumer.group)
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher;
-  val topics: Seq[String] = Seq("cmc-feed", "tweet-stream")
+  val topics: Seq[String] = Seq("tweet-stream")
 
+  println(config.kafkaConsumer, config.postgresql)
   val connectionPool: ConnectionPool = new ConnectionPool(config)
   val connection = connectionPool.get()
-
   topics.foreach {
     case "cmc-feed" => {
       CMCFeedPersistor.createTable(connection)
-      new KafkaConsumer[CMCFeed]("cmc-feed", connectionPool, CMCFeedPersistor)
+      new KafkaConsumer[CMCFeed]("cmc-feed", connectionPool, CMCFeedPersistor, config)
     }
     case "tweet-stream" => {
       TweetPersistor.createTable(connection)
-      new KafkaConsumer[Tweet]("tweet-stream", connectionPool, TweetPersistor)
+      new KafkaConsumer[Tweet]("tweet-stream", connectionPool, TweetPersistor, config)
     }
   }
 
