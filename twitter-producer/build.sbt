@@ -18,9 +18,12 @@ libraryDependencies ++= Seq(
   "org.apache.kafka" % "kafka-clients" % "2.1.0",
   "io.confluent" % "kafka-avro-serializer" % "5.0.1",
   "com.sksamuel.avro4s" %% "avro4s-core" % "2.0.3",
-  "ch.qos.logback" % "logback-classic" % "1.2.3"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
 )
 
 scalaVersion := "2.12.8"
 
 sourceGenerators in Compile += (avroScalaGenerateSpecific in Compile).taskValue
+trapExit := false
+
