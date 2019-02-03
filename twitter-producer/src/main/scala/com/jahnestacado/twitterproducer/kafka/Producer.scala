@@ -1,16 +1,17 @@
-package com.jahnestacado.twitterproducer
+package com.jahnestacado.twitterproducer.kafka
 
 import java.util.Properties
 
 import com.danielasfregola.twitter4s.entities.{Tweet => TweetOrig}
 import com.jahnestacado.model.Tweet
+import com.jahnestacado.twitterproducer.{Config, TweetToAvroMapper}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.producer._
 import org.apache.kafka.common.serialization.StringSerializer
 
 import scala.util.{Failure, Try}
 
-class TweetKafkaProducer(config: Config) extends LazyLogging {
+class Producer(config: Config) extends LazyLogging {
   private val shemaRegistryUrl: String = config.kafkaProducer.schemaRegistryUrl
   private val topicName: String = config.kafkaProducer.topic
   private val boostrapServers: String = config.kafkaProducer.bootstrapServers
