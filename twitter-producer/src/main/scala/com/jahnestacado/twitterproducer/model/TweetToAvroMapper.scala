@@ -1,11 +1,10 @@
-package com.jahnestacado.twitterproducer
+package com.jahnestacado.twitterproducer.model
 
+import com.danielasfregola.twitter4s.entities.{Entities, Tweet => TweetSrc, User => UserSrc}
 import com.jahnestacado.model.{Tweet, User}
-import com.danielasfregola.twitter4s.entities.{Entities, Tweet => TweetOrig, User => UserOrig}
-
 
 object TweetToAvroMapper {
-  def mapTweet(_tweet: TweetOrig): Tweet = {
+  def mapTweet(_tweet: TweetSrc): Tweet = {
     val tweet = new Tweet(
       created_at = _tweet.created_at.toString,
       id = _tweet.id,
@@ -16,11 +15,11 @@ object TweetToAvroMapper {
       retweet_count = _tweet.retweet_count,
       favorite_count = _tweet.favorite_count,
       hashtags = _tweet.entities match {
-        case Some(e:Entities) => Some(e.hashtags.toSeq.map(_.text))
+        case Some(e: Entities) => Some(e.hashtags.toSeq.map(_.text))
         case None => Option.empty[Seq[String]]
       },
       users_mentions_by = _tweet.entities match {
-        case Some(e:Entities) => Some(e.user_mentions.toSeq.map(_.id))
+        case Some(e: Entities) => Some(e.user_mentions.toSeq.map(_.id))
         case None => Option.empty[Seq[Long]]
       },
       favorited = _tweet.favorited,
@@ -32,8 +31,8 @@ object TweetToAvroMapper {
     return tweet
   }
 
-  def mapUser(_user: Option[UserOrig]): Option[User]= _user match {
-    case Some(u:UserOrig) => {
+  def mapUser(_user: Option[UserSrc]): Option[User] = _user match {
+    case Some(u: UserSrc) => {
       val user = new User(
         name = u.name,
         id = u.id,
@@ -45,11 +44,11 @@ object TweetToAvroMapper {
         followers_count = u.followers_count,
         friends_count = u.friends_count,
         listed_count = u.listed_count,
-        statuses_count =u.statuses_count,
+        statuses_count = u.statuses_count,
         favourites_count = u.favourites_count,
         created_at = u.created_at.toString,
         lang = u.lang,
-        following= u.following,
+        following = u.following,
         follow_request_sent = u.follow_request_sent,
         notifications = u.notifications
       )

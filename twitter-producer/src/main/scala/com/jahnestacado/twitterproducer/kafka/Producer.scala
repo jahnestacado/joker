@@ -4,7 +4,8 @@ import java.util.Properties
 
 import com.danielasfregola.twitter4s.entities.{Tweet => TweetOrig}
 import com.jahnestacado.model.Tweet
-import com.jahnestacado.twitterproducer.{Config, TweetToAvroMapper}
+import com.jahnestacado.twitterproducer.Config
+import com.jahnestacado.twitterproducer.model.TweetToAvroMapper
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.producer._
 import org.apache.kafka.common.serialization.StringSerializer
