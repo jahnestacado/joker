@@ -25,5 +25,4 @@ libraryDependencies ++= Seq(
 scalaVersion := "2.12.8"
 
 sourceGenerators in Compile += (avroScalaGenerateSpecific in Compile).taskValue
-trapExit := false
 
