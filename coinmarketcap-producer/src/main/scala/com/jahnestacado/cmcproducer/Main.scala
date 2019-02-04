@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import com.jahnestacado.cmcproducer.model.{CryptoReport, CurrencyQuote, Root}
+import com.jahnestacado.cmcproducer.model.{CryptoReport, CurrencyQuote, Feeds}
 import com.jahnestacado.coinmarketcapproducer.CMCKafkaProducer
 import com.typesafe.scalalogging.LazyLogging
 import spray.json.DefaultJsonProtocol._
@@ -30,17 +30,18 @@ object Main extends App with LazyLogging {
     headers = scala.collection.immutable.Seq(RawHeader(config.cmc.apiKeyHeader, config.cmc.token)
     ))
 
+  implicit val currencyQuoteFormat = jsonFormat7(CurrencyQuote)
+  implicit val cryptoReportFormat = jsonFormat9(CryptoReport)
+  implicit val feedsFormat = jsonFormat1(Feeds)
+
   system.scheduler.schedule(1.seconds, config.cmc.pullInterval) {
     val responseFuture: Future[HttpResponse] = Http().singleRequest(httpRequest)
 
     responseFuture.onComplete {
       case Success(res: HttpResponse) => {
-        implicit val currencyQuoteFormat = jsonFormat7(CurrencyQuote)
-        implicit val cryptoReportFormat = jsonFormat9(CryptoReport)
-        implicit val rootFormat = jsonFormat1(Root)
         Unmarshal(res.entity).to[String].map(f = (json: String) => {
-          val feeds = json.parseJson.convertTo[Root]
-          feeds.data.values.foreach{ feed =>
+          val feeds = json.parseJson.convertTo[Feeds]
+          feeds.data.values.foreach { feed =>
             Try(producer.send(feed)) match {
               case Failure(ex) =>
                 logger.error(s"An error occured while sending record. ${ex.getMessage}")
