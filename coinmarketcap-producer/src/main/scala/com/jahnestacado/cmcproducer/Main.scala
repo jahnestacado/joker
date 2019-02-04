@@ -42,9 +42,10 @@ object Main extends App with LazyLogging {
         Unmarshal(res.entity).to[String].map(f = (json: String) => {
           val feeds = json.parseJson.convertTo[Feeds]
           feeds.data.values.foreach { feed =>
+            logger.debug(s"Sending feed record $feed")
             Try(producer.send(feed)) match {
               case Failure(ex) =>
-                logger.error(s"An error occured while sending record. ${ex.getMessage}")
+                logger.error(s"An error occured while sending feed record. ${ex.getMessage}")
               case _ => // don't care
             }
           }
