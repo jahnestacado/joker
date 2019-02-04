@@ -5,10 +5,13 @@ import java.util.Properties
 import com.jahnestacado.cmc.model.CMCFeed
 import com.jahnestacado.cmcproducer.model.CryptoReport
 import com.jahnestacado.cmcproducer.{CMCToAvroMapper, Config}
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.kafka.common.serialization.StringSerializer
 
-class CMCKafkaProducer(config: Config) {
+import scala.util.{Failure, Try}
+
+class CMCKafkaProducer(config: Config) extends LazyLogging{
   private val shemaRegistryUrl: String = config.kafkaProducer.schemaRegistryUrl
   private val topicName: String = config.kafkaProducer.topic
   private val boostrapServers: String =  config.kafkaProducer.bootstrapServers
@@ -24,7 +27,11 @@ class CMCKafkaProducer(config: Config) {
   def send(feed: CryptoReport): Unit = {
     val avroFeed = CMCToAvroMapper.mapFeed(feed)
     val record : ProducerRecord[String, CMCFeed] =  new ProducerRecord(topicName, avroFeed)
-    producer.send(record)
+    Try(producer.send(record)) match {
+      case Failure(ex) =>
+        throw ex
+      case _ => // don't care
+    }
   }
 
 }

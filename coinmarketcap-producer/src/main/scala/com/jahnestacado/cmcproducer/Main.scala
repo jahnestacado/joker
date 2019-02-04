@@ -8,15 +8,16 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.jahnestacado.cmcproducer.model.{CryptoReport, CurrencyQuote, Root}
 import com.jahnestacado.coinmarketcapproducer.CMCKafkaProducer
+import com.typesafe.scalalogging.LazyLogging
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 
-object Main extends App {
+object Main extends App with LazyLogging {
   implicit val system = ActorSystem("coinmarketcapproducer")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
@@ -39,8 +40,13 @@ object Main extends App {
         implicit val rootFormat = jsonFormat1(Root)
         Unmarshal(res.entity).to[String].map(f = (json: String) => {
           val feeds = json.parseJson.convertTo[Root]
-          println("Sending feeds", feeds)
-          feeds.data.values.foreach(producer.send(_))
+          feeds.data.values.foreach{ feed =>
+            Try(producer.send(feed)) match {
+              case Failure(ex) =>
+                logger.error(s"An error occured while sending record. ${ex.getMessage}")
+              case _ => // don't care
+            }
+          }
         })
       }
       case Failure(err) => println(err)
