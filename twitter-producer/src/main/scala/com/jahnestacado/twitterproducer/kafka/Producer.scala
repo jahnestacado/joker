@@ -19,6 +19,7 @@ class Producer(config: Config) extends LazyLogging {
     Try(producer.send(record)) match {
       case Failure(ex) =>
         logger.error(s"An error occured while sending record. ${ex.getMessage}")
+      case _ => // don't care
     }
   }
 }
