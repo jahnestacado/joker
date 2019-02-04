@@ -1,14 +1,17 @@
 package com.jahnestacado.cmcproducer
 
+import java.util.Properties
+
 import com.typesafe.config.ConfigFactory
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.common.serialization.StringSerializer
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.util.Properties
 
 class Config() {
   private val cmcConfig = ConfigFactory.load().getConfig("coinmarketcap")
-  private val kafkaProducerConfig = ConfigFactory.load().getConfig("kafka-producer")
+  private val kafkaProducerConfig = ConfigFactory.load().getConfig("kafka.producer")
 
   case class CMCConfig(token: String,
                        uri: String,
@@ -18,25 +21,29 @@ class Config() {
                       )
 
   case class KafkaProducer(
-                            bootstrapServers: String,
-                            schemaRegistryUrl: String,
+                            props: Properties,
                             topic: String
                           )
 
+
+  private val props = new Properties()
+  props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProducerConfig.getString("bootstrapServers"))
+  props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
+  props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[io.confluent.kafka.serializers.KafkaAvroSerializer].getName)
+  props.put(ProducerConfig.ACKS_CONFIG, kafkaProducerConfig.getString("acks"))
+  props.put("schema.registry.url", kafkaProducerConfig.getString("schemaRegistryUrl"))
+
   val cmc = CMCConfig(
-    token = Properties.envOrElse("CMC_TOKEN", cmcConfig.getString("token")),
-    uri = Properties.envOrElse("CMC_URL", cmcConfig.getString("uri")),
-    coinIds = if (!Properties.envOrElse("CMC_COIN_IDS", "").isEmpty) {
-      sys.env("CMC_COIN_IDS").split(",").toList
-    } else cmcConfig.getStringList("coin-ids").asScala.toList,
+    token = cmcConfig.getString("token"),
+    uri = cmcConfig.getString("uri"),
+    coinIds = cmcConfig.getStringList("coin-ids").asScala.toList,
     apiKeyHeader = cmcConfig.getString("api-key-header"),
     pullInterval = Duration.fromNanos(cmcConfig.getDuration("pull-interval").toNanos)
   )
 
   val kafkaProducer = KafkaProducer(
-    bootstrapServers = Properties.envOrElse("KAFKA_PRODUCER_BOOTSTRAP_SERVERS", kafkaProducerConfig.getString("bootstrapServers")),
-    schemaRegistryUrl = Properties.envOrElse("KAFKA_PRODUCER_SCHEMA_REGISTRY_URL", kafkaProducerConfig.getString("schemaRegistryUrl")),
-    topic = Properties.envOrElse("KAFKA_PRODUCER_TOPIC", kafkaProducerConfig.getString("topic")),
+    props = props,
+    topic = kafkaProducerConfig.getString("topic"),
   )
 
 }

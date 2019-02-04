@@ -1,8 +1,6 @@
-package com.jahnestacado.cmcproducer
+package com.jahnestacado.cmcproducer.model
 
 import com.jahnestacado.cmc.model.CMCFeed
-import com.jahnestacado.cmcproducer.model.CryptoReport
-
 
 object CMCToAvroMapper {
   val currency =  "USD"
