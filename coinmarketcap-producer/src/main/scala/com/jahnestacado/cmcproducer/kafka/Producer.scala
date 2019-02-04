@@ -1,14 +1,14 @@
-package com.jahnestacado.coinmarketcapproducer
+package com.jahnestacado.cmcproducer.kafka
 
 import com.jahnestacado.cmc.model.CMCFeed
-import com.jahnestacado.cmcproducer.model.{CMCToAvroMapper, CryptoReport}
 import com.jahnestacado.cmcproducer.Config
+import com.jahnestacado.cmcproducer.model.{CMCToAvroMapper, CryptoReport}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 
 import scala.util.{Failure, Try}
 
-class CMCKafkaProducer(config: Config) extends LazyLogging {
+class Producer(config: Config) extends LazyLogging {
   private val producer = new KafkaProducer[String, CMCFeed](config.kafkaProducer.props)
 
   def send(feed: CryptoReport): Unit = {

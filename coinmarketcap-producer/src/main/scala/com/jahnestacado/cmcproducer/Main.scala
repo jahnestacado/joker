@@ -6,8 +6,8 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import com.jahnestacado.cmcproducer.kafka.Producer
 import com.jahnestacado.cmcproducer.model.{CryptoReport, CurrencyQuote, Feeds}
-import com.jahnestacado.coinmarketcapproducer.CMCKafkaProducer
 import com.typesafe.scalalogging.LazyLogging
 import spray.json.DefaultJsonProtocol._
 import spray.json._
@@ -23,7 +23,7 @@ object Main extends App with LazyLogging {
   implicit val executionContext = system.dispatcher
 
   val config: Config = new Config()
-  val producer: CMCKafkaProducer = new CMCKafkaProducer(config)
+  val producer: Producer = new Producer(config)
 
   val httpRequest = HttpRequest(
     uri = config.cmc.uri + config.cmc.coinIds.mkString(","),
