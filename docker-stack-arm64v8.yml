@@ -89,7 +89,31 @@ services:
       - /home/jahn/shared/kafka/2/:/var/lib/kafka/data
     deploy:
       placement:
-        constraints: [node.hostname == minion-3]
+        constraints: [node.hostname == minion-2]
+        
+  kafka-3:
+    image: zeelos/cp-kafka:5.0.0-arm64v8
+    hostname: kafka-3
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    ports:
+    - "39092:39092"
+    environment:
+      KAFKA_BROKER_ID: 2   3
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2182,zoo3:2183
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:39092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_NUM_PARTITIONS: 2
+      KAFKA_HEAP_OPTS: -Xmx256M -Xms128M
+    volumes:
+      - /home/jahn/shared/kafka/3/:/var/lib/kafka/data
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-4]
       
   schema-registry:
     image: zeelos/cp-schema-registry:5.0.0-arm64v8
@@ -100,6 +124,7 @@ services:
         - zoo3
         - kafka-1
         - kafka-2
+        - kafka-3
     ports:
       - "8085:8085"
     environment:
@@ -127,9 +152,10 @@ services:
         - zoo3
         - kafka-1
         - kafka-2
+        - kafka-3
         - schema-registry
     environment:
-      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:39092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://schema-registry:8085
       CMC_COIN_IDS: "1,2,1831,1027,52"
 
@@ -141,9 +167,10 @@ services:
         - zoo3
         - kafka-1
         - kafka-2
+        - kafka-3
         - schema-registry
     environment:
-      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:39092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://schema-registry:8085
       TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
     deploy:
@@ -158,10 +185,11 @@ services:
         - zoo3
         - kafka-1
         - kafka-2
+        - kafka-3
         - postgresql
         - schema-registry
     environment:
-      KAFKA_CONSUMER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092
+      KAFKA_CONSUMER_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:29092,kafka-3:29092
       KAFKA_SCHEMA_REGISTRY_URL: http://schema-registry:8085
       POSTGRESQL_HOST: postgresql
       POSTGRESQL_PORT: 5432
