@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 
 
 class Config() {
-  private val kafkaConsumerConfig = ConfigFactory.load().getConfig("kafka-consumer")
+  private val kafkaConsumerConfig = ConfigFactory.load().getConfig("kafka.consumer")
   private val postgresqlConfig = ConfigFactory.load().getConfig("postgresql")
 
   case class KafkaConsumer(
