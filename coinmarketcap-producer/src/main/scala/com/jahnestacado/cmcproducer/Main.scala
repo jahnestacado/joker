@@ -7,9 +7,8 @@ import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.jahnestacado.cmcproducer.kafka.Producer
-import com.jahnestacado.cmcproducer.model.{CryptoReport, CurrencyQuote, Feeds}
+import com.jahnestacado.cmcproducer.model.{CMCFeedJsonProtocol, Feeds}
 import com.typesafe.scalalogging.LazyLogging
-import spray.json.DefaultJsonProtocol._
 import spray.json._
 
 import scala.concurrent.Future
@@ -17,7 +16,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 
-object Main extends App with LazyLogging {
+object Main extends App with CMCFeedJsonProtocol with LazyLogging {
   implicit val system = ActorSystem("coinmarketcapproducer")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
@@ -29,10 +28,6 @@ object Main extends App with LazyLogging {
     uri = config.cmc.uri + config.cmc.coinIds.mkString(","),
     headers = scala.collection.immutable.Seq(RawHeader(config.cmc.apiKeyHeader, config.cmc.token)
     ))
-
-  implicit val currencyQuoteFormat = jsonFormat7(CurrencyQuote)
-  implicit val cryptoReportFormat = jsonFormat9(CryptoReport)
-  implicit val feedsFormat = jsonFormat1(Feeds)
 
   system.scheduler.schedule(1.seconds, config.cmc.pullInterval) {
     val responseFuture: Future[HttpResponse] = Http().singleRequest(httpRequest)
