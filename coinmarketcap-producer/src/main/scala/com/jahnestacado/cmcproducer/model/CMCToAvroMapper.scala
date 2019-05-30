@@ -3,7 +3,7 @@ package com.jahnestacado.cmcproducer.model
 import com.jahnestacado.cmc.model.CMCFeed
 
 object CMCToAvroMapper {
-  val currency =  "USD"
+  private[this] val currency =  "USD"
   def mapFeed(report: CryptoReport): CMCFeed = {
     val feed: CMCFeed = new CMCFeed(
       id = report.id,

@@ -1,11 +1,10 @@
 package com.jahnestacado.cmcproducer
 
-import java.util.Properties
-
+import akka.kafka.ProducerSettings
+import com.jahnestacado.cmc.model.CMCFeed
 import com.typesafe.config.ConfigFactory
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.serialization.StringSerializer
-
+import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroSerializer}
+import org.apache.kafka.common.serialization._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
@@ -15,35 +14,41 @@ class Config() {
 
   case class CMCConfig(token: String,
                        uri: String,
-                       coinIds: List[String],
+                       coinIds: String,
                        apiKeyHeader: String,
                        pullInterval: FiniteDuration
                       )
 
   case class KafkaProducer(
-                            props: Properties,
+                            settings: ProducerSettings[String, CMCFeed],
                             topic: String
                           )
 
 
-  private val props = new Properties()
-  props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProducerConfig.getString("bootstrapServers"))
-  props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
-  props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[io.confluent.kafka.serializers.KafkaAvroSerializer].getName)
-  props.put(ProducerConfig.ACKS_CONFIG, kafkaProducerConfig.getString("acks"))
-  props.put("schema.registry.url", kafkaProducerConfig.getString("schemaRegistryUrl"))
+  private[this] val akkaKafkaProducerConfig = ConfigFactory.load().getConfig("akka.kafka.producer")
+  private[this] val producerSettings: ProducerSettings[String, CMCFeed] = {
+    val kafkaAvroSerDeConfig = Map[String, Any] {
+      AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG -> kafkaProducerConfig.getString("schemaRegistryUrl")
+    }
+    val kafkaAvroSerializer = new KafkaAvroSerializer()
+    kafkaAvroSerializer.configure(kafkaAvroSerDeConfig.asJava, false)
+    val cmcFeedSerializer = kafkaAvroSerializer.asInstanceOf[Serializer[CMCFeed]]
+
+    ProducerSettings(akkaKafkaProducerConfig, new StringSerializer, cmcFeedSerializer)
+      .withBootstrapServers(kafkaProducerConfig.getString("bootstrapServers"))
+  }
+
+  val kafkaProducer = KafkaProducer(
+    settings = producerSettings,
+    topic = kafkaProducerConfig.getString("topic"),
+  )
 
   val cmc = CMCConfig(
     token = cmcConfig.getString("token"),
     uri = cmcConfig.getString("uri"),
-    coinIds = cmcConfig.getStringList("coin-ids").asScala.toList,
+    coinIds = cmcConfig.getString("coin-ids"),
     apiKeyHeader = cmcConfig.getString("api-key-header"),
     pullInterval = Duration.fromNanos(cmcConfig.getDuration("pull-interval").toNanos)
-  )
-
-  val kafkaProducer = KafkaProducer(
-    props = props,
-    topic = kafkaProducerConfig.getString("topic"),
   )
 
 }
