@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.kafka.scaladsl.Producer
 import akka.stream.ActorAttributes.supervisionStrategy
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Attributes}
 import akka.stream.Supervision.resumingDecider
 import akka.stream.scaladsl.{Keep, Source}
 import com.jahnestacado.cmc.model.CMCFeed
@@ -15,7 +15,6 @@ import com.jahnestacado.cmcproducer.model.{CMCFeedJsonProtocol, CMCToAvroMapper,
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.kafka.clients.producer.ProducerRecord
 import spray.json._
-
 import scala.concurrent.duration._
 
 class ProducerStream()(implicit system: ActorSystem, mat: ActorMaterializer) {
@@ -29,11 +28,13 @@ class ProducerStream()(implicit system: ActorSystem, mat: ActorMaterializer) {
     .flatMapConcat(json =>
       Source.fromIterator[CryptoReport](() => json.parseJson.convertTo[Feeds].data.values.toIterator)
     )
+    .log("Sending CMCFeed to Kafka -----> ", _.toJson)
     .map[ProducerRecord[String, CMCFeed]](feed => {
     val avroFeed = CMCToAvroMapper.mapFeed(feed)
     new ProducerRecord(config.kafkaProducer.topic, avroFeed)
   })
     .withAttributes(supervisionStrategy(resumingDecider))
+    .addAttributes(streamLogConfig)
 
   def run(): Cancellable = source
     .toMat(Producer.plainSink(config.kafkaProducer.settings))(Keep.left)
@@ -46,6 +47,9 @@ object ProducerStream extends LazyLogging with CMCFeedJsonProtocol {
   private val uri: String = config.cmc.uri + config.cmc.coinIds
   private val headers: Seq[RawHeader] = Seq(RawHeader(config.cmc.apiKeyHeader, config.cmc.token))
   private val parallelism: Int = 1
-  println(uri)
+  private val streamLogConfig: Attributes = Attributes.logLevels(
+    onElement = Attributes.LogLevels.Info,
+    onFinish = Attributes.LogLevels.Error
+  )
 }
 
