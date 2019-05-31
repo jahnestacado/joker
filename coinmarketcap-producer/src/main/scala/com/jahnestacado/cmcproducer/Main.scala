@@ -11,10 +11,15 @@ object Main extends App
   with CMCFeedJsonProtocol
   with HttpClient
   with LazyLogging {
-  implicit val system = ActorSystem("coinmarketcapproducer")
-  implicit val materializer = ActorMaterializer()
-  implicit val executionContext = system.dispatcher
 
-  val producerStream = new ProducerStream()
-  producerStream.run();
+  {
+    val config: Config = new Config();
+    implicit val system = ActorSystem("coinmarketcapproducer")
+    implicit val materializer = ActorMaterializer()
+    implicit val executionContext = system.dispatcher
+    val producerStream = new ProducerStream(config)
+
+    producerStream.run();
+  }
+
 }
