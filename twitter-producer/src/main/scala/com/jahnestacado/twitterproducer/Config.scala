@@ -1,10 +1,10 @@
 package com.jahnestacado.twitterproducer
 
-import java.util.Properties
-
+import akka.kafka.ProducerSettings
+import com.jahnestacado.model.Tweet
 import com.typesafe.config.ConfigFactory
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.serialization.StringSerializer
+import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroSerializer}
+import org.apache.kafka.common.serialization.{Serializer, StringSerializer}
 
 import scala.collection.JavaConverters._
 
@@ -17,32 +17,40 @@ class Config() {
                             apiSecret: String,
                             accessKey: String,
                             accessSecret: String,
-                            tracks: List[String],
+                            keywords: List[String],
                           )
 
   case class KafkaProducer(
-                            props: Properties,
+                            settings: ProducerSettings[String, Tweet],
                             topic: String,
+                            sourceQueueBuffer: Int
                           )
+
+  private[this] val akkaKafkaProducerConfig = ConfigFactory.load().getConfig("akka.kafka.producer")
+  private[this] val producerSettings: ProducerSettings[String, Tweet] = {
+    val kafkaAvroSerDeConfig = Map[String, Any] {
+      AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG -> kafkaProducerConfig.getString("schemaRegistryUrl")
+    }
+    val kafkaAvroSerializer = new KafkaAvroSerializer()
+    kafkaAvroSerializer.configure(kafkaAvroSerDeConfig.asJava, false)
+    val tweetSerializer = kafkaAvroSerializer.asInstanceOf[Serializer[Tweet]]
+
+    ProducerSettings(akkaKafkaProducerConfig, new StringSerializer, tweetSerializer)
+      .withBootstrapServers(kafkaProducerConfig.getString("bootstrapServers"))
+  }
+
+  val kafkaProducer = KafkaProducer(
+    settings = producerSettings,
+    topic = kafkaProducerConfig.getString("topic"),
+    sourceQueueBuffer = kafkaProducerConfig.getInt("source-queue-buffer"),
+  )
 
   val twitter = TwitterConfig(
     apiKey = twitterConfig.getString("consumer.key"),
     apiSecret = twitterConfig.getString("consumer.secret"),
     accessKey = twitterConfig.getString("access.key"),
     accessSecret = twitterConfig.getString("access.secret"),
-    tracks = twitterConfig.getStringList("tracks").asScala.toList,
-  )
-
-  private val props = new Properties()
-  props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProducerConfig.getString("bootstrapServers"))
-  props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
-  props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[io.confluent.kafka.serializers.KafkaAvroSerializer].getName)
-  props.put(ProducerConfig.ACKS_CONFIG, kafkaProducerConfig.getString("acks"))
-  props.put("schema.registry.url", kafkaProducerConfig.getString("schemaRegistryUrl"))
-
-  val kafkaProducer = KafkaProducer(
-    props = props,
-    topic = kafkaProducerConfig.getString("topic"),
+    keywords = twitterConfig.getString("keywords").split(",").toList,
   )
 
 }

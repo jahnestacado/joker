@@ -12,12 +12,14 @@ enablePlugins(JavaAppPackaging, UniversalPlugin)
 
 resolvers += "confluent" at "http://packages.confluent.io/maven/"
 
+val akkaVersion = "2.5.23"
+
 libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+  "com.typesafe.akka" %% "akka-stream-kafka" % "1.0.3",
   "com.danielasfregola" %% "twitter4s" % "5.5",
-  "com.typesafe" % "config" % "1.3.2",
-  "org.apache.kafka" % "kafka-clients" % "2.1.0",
-  "io.confluent" % "kafka-avro-serializer" % "5.0.1",
-  "com.sksamuel.avro4s" %% "avro4s-core" % "2.0.3",
+  "io.confluent" % "kafka-avro-serializer" % "5.2.1",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
 )

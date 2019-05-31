@@ -16,7 +16,7 @@
         {"name": "statuses_count", "type": "int"},
         {"name": "favourites_count", "type": "int"},
         {"name": "created_at", "type": "string"},
-        {"name": "lang", "type": "string"},
+        {"name": "lang", "type": ["null", "string"], "default": ""},
         {"name": "following", "type": "boolean"},
         {"name": "follow_request_sent", "type": "boolean"},
         {"name": "notifications", "type": "boolean"}
