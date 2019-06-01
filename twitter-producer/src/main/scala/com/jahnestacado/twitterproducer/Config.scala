@@ -36,7 +36,6 @@ class Config() {
     val tweetSerializer = kafkaAvroSerializer.asInstanceOf[Serializer[Tweet]]
 
     ProducerSettings(akkaKafkaProducerConfig, new StringSerializer, tweetSerializer)
-      .withBootstrapServers(kafkaProducerConfig.getString("bootstrapServers"))
   }
 
   val kafkaProducer = KafkaProducer(
