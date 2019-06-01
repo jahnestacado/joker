@@ -1,6 +1,6 @@
 package jahnestacado.postgresql.sink.rdbms
 
-import java.sql.Connection
+import java.sql.{Connection, PreparedStatement}
 
 import akka.Done
 import com.jahnestacado.cmc.model.CMCFeed
@@ -14,9 +14,9 @@ object CMCFeedPersistor extends Persistor[CMCFeed] with LazyLogging {
 
   val topic: String = "cmc-feed"
 
-  def createTable(connection: Connection) = {
+  def createTable(connection: Connection): Unit = {
     logger.info(s"Initializing table $tableName")
-    val preparedStatement = connection.prepareStatement(
+    val preparedStatement: PreparedStatement = connection.prepareStatement(
       s"""CREATE TABLE IF NOT EXISTS ${tableName} (
       insertion_time timestamptz DEFAULT current_timestamp,
       id integer,
@@ -40,7 +40,7 @@ object CMCFeedPersistor extends Persistor[CMCFeed] with LazyLogging {
   }
 
   def insert(connection: Connection, feed: CMCFeed)(implicit executionContext: ExecutionContext): Future[Done] = Future {
-    val statement = connection.prepareStatement(
+    val statement: PreparedStatement = connection.prepareStatement(
       s"""INSERT INTO ${tableName} (
          id,
          name,
@@ -74,7 +74,6 @@ object CMCFeedPersistor extends Persistor[CMCFeed] with LazyLogging {
     statement.setDouble(13, feed.percent_change_7h)
     statement.setDouble(14, feed.percent_change_24h)
     statement.setDouble(15, feed.market_cap)
-
     statement.executeUpdate()
     statement.close()
     Done

@@ -1,6 +1,6 @@
 package jahnestacado.postgresql.sink.rdbms
 
-import java.sql.Connection
+import java.sql.{Connection, PreparedStatement}
 
 import akka.Done
 import com.jahnestacado.model.Tweet
@@ -16,7 +16,7 @@ object TweetPersistor extends Persistor[Tweet] with LazyLogging {
 
   def createTable(connection: Connection) = {
     logger.info(s"Initializing table $tableName")
-    val preparedStatement = connection.prepareStatement(
+    val preparedStatement: PreparedStatement = connection.prepareStatement(
       s"""CREATE TABLE IF NOT EXISTS ${tableName} (
       insertion_time timestamptz DEFAULT current_timestamp,
       created_at text,
@@ -56,7 +56,7 @@ object TweetPersistor extends Persistor[Tweet] with LazyLogging {
   }
 
   def insert(connection: Connection, tweet: Tweet)(implicit executionContext: ExecutionContext): Future[Done] = Future {
-    val statement = connection.prepareStatement(
+    val statement: PreparedStatement = connection.prepareStatement(
       s"""INSERT INTO ${tableName} (
             created_at,
             id,
@@ -121,7 +121,7 @@ object TweetPersistor extends Persistor[Tweet] with LazyLogging {
         statement.setInt(25, user.statuses_count)
         statement.setInt(26, user.favourites_count)
         statement.setString(27, user.created_at)
-        statement.setString(28, user.lang)
+        statement.setString(28, user.lang.getOrElse(""))
         statement.setBoolean(29, user.following)
         statement.setBoolean(30, user.follow_request_sent)
         statement.setBoolean(31, user.notifications)

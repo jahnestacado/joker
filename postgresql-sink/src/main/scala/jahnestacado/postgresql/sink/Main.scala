@@ -5,18 +5,18 @@ import akka.stream.ActorMaterializer
 import com.jahnestacado.cmc.model.CMCFeed
 import com.jahnestacado.model.Tweet
 import com.typesafe.scalalogging.LazyLogging
-import jahnestacado.postgresql.sink.kafka.Consumer
+import jahnestacado.postgresql.sink.kafka.ConsumerStream
 import jahnestacado.postgresql.sink.rdbms.{CMCFeedPersistor, ConnectionPool, TweetPersistor}
 
 object Main extends App with LazyLogging {
-  val config: Config = new Config();
-  implicit val system = ActorSystem.create(config.kafkaConsumer.group)
+
+  implicit val system = ActorSystem.create("postgresql-sink")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher;
 
+  val config: Config = new Config();
   val connectionPool: ConnectionPool = new ConnectionPool(config)
   val connection = connectionPool.get()
-
   if (connection.isEmpty) {
     logger.error("Unable to connect to postgres. Shutting down...")
     System.exit(1)
@@ -25,8 +25,11 @@ object Main extends App with LazyLogging {
   CMCFeedPersistor.createTable(connection.get)
   TweetPersistor.createTable(connection.get)
 
-  val cmcConsumer: Consumer[CMCFeed] = new Consumer[CMCFeed](connectionPool, config, CMCFeedPersistor)
-  val tweetConsumer: Consumer[Tweet] = new Consumer[Tweet](connectionPool, config, TweetPersistor)
+  val cmcConsumer: ConsumerStream[CMCFeed] = new ConsumerStream[CMCFeed](connectionPool, config, CMCFeedPersistor)
+  val tweetConsumer = new ConsumerStream[Tweet](connectionPool, config, TweetPersistor)
+
+  cmcConsumer.run
+  tweetConsumer.run
 
 }
 
