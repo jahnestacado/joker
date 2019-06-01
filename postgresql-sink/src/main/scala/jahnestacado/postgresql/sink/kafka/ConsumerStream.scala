@@ -9,6 +9,7 @@ import akka.stream.scaladsl.{RestartSource, Sink, Source}
 import akka.{Done, NotUsed}
 import jahnestacado.postgresql.sink.Config
 import jahnestacado.postgresql.sink.rdbms.{ConnectionPool, Persistor}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class ConsumerStream[T](connectionPool: ConnectionPool, config: Config, Persistor: Persistor[T])
