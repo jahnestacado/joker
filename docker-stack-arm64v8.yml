@@ -17,15 +17,15 @@ services:
   coinmarketcap-producer:
     image: jahnestacado/coinmarketcap-producer
     environment:
-      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP:?HOST_IP must be set}:29092,${HOST_IP:?HOST_IP must be set}:39092
-      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP:?HOST_IP must be set}:8085
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP}:29092,${HOST_IP}:39092
+      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP}:8085
       CMC_COIN_IDS: "1,2,1831,1027,52"
 
   twitter-producer:
     image: jahnestacado/twitter-producer
     environment:
-      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP:?HOST_IP must be set}:29092,${HOST_IP:?HOST_IP must be set}:39092
-      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP:?HOST_IP must be set}:8085
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP}:19092,${HOST_IP}:29092,${HOST_IP}:39092
+      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP}:8085
       TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
 
   postgresql-sink:
@@ -33,8 +33,8 @@ services:
     depends_on:
         - postgresql
     environment:
-      KAFKA_CONSUMER_BOOTSTRAP_SERVERS:${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP:?HOST_IP must be set}:29092,${HOST_IP:?HOST_IP must be set}:39092
-      KAFKA_SCHEMA_REGISTRY_URL: http://${HOST_IP:?HOST_IP must be set}:8085
+      KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${HOST_IP}:19092,${HOST_IP}:29092,${HOST_IP}:39092
+      KAFKA_SCHEMA_REGISTRY_URL: http://${HOST_IP}:8085
       POSTGRESQL_HOST: postgresql
       POSTGRESQL_PORT: 5432
     deploy:
