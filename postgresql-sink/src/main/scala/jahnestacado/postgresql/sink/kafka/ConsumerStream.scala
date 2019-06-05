@@ -17,7 +17,9 @@ class ConsumerStream[T](connectionPool: ConnectionPool, config: Config, Persisto
 
   private val kafkaConsumerConfig: config.KafkaConsumer = config.kafkaConsumer
   private val parallelism: Int = kafkaConsumerConfig.numPartitions
-  private val consumerSettings: ConsumerSettings[String, T] = kafkaConsumerConfig.getConsumerSettings[T]
+  private val topic: String = Persistor.topic
+  private val consumerSettings: ConsumerSettings[String, T] = kafkaConsumerConfig
+    .getConsumerSettings[T](topic = topic)
   private val backoffStrategyConfig = kafkaConsumerConfig.backoffStrategy
 
   private val restartSource: Source[Done, NotUsed] = RestartSource.onFailuresWithBackoff(
@@ -26,7 +28,7 @@ class ConsumerStream[T](connectionPool: ConnectionPool, config: Config, Persisto
     randomFactor = backoffStrategyConfig.randomFactor
   ) { () =>
     Consumer
-      .committablePartitionedSource(consumerSettings, Subscriptions.topics(Persistor.topic))
+      .committablePartitionedSource(consumerSettings, Subscriptions.topics(topic))
       .flatMapMerge(parallelism, _._2)
   }
     .log("Received record", _.record.value())

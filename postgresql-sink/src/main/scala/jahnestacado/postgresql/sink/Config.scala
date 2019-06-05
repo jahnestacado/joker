@@ -27,13 +27,13 @@ class Config()(implicit system: ActorSystem) {
       KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG -> "true"
     )
 
-    def getConsumerSettings[T]: ConsumerSettings[String, T] = {
+    def getConsumerSettings[T](topic: String): ConsumerSettings[String, T] = {
       val kafkaAvroDeserializer = new KafkaAvroDeserializer()
       kafkaAvroDeserializer.configure(kafkaAvroSerDeConfig.asJava, false)
       val deserializer = kafkaAvroDeserializer.asInstanceOf[Deserializer[T]]
 
       ConsumerSettings(system, new StringDeserializer, deserializer)
-        .withGroupId(group)
+        .withGroupId(s"${group}_$topic")
     }
   }
 
