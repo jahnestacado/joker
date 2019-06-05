@@ -43,7 +43,7 @@ services:
     environment:
       KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP}:19092,${HOST_IP}:29092,${HOST_IP}:39092
       KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP}:8085
-      TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
+      TWITTER_KEYWORDS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
 
   postgresql-sink:
     image: jahnestacado/postgresql-sink
