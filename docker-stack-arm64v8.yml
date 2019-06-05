@@ -1,41 +1,58 @@
 version: "3"
 services:
-  postgresql:
-    image: postgres
-    hostname: postgresql
+  postgresql-master:
+    image: jahnestacado/postgres-master-arm64v8
     ports:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      PG_REP_USER: rep
+      PG_REP_PASSWORD: postgres
     volumes:
       - /home/jahn/postgres:/var/lib/postgresql/data
     deploy:
       placement:
         constraints: [node.hostname == minion-4]
+
+  postgresql-slave:
+    image: jahnestacado/postgres-slave-arm64v8
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      PG_REP_USER: rep
+      PG_REP_PASSWORD: postgres
+      PG_MASTER_HOST: postgresql-master
+    volumes:
+      - /home/jahn/postgres-slave:/var/lib/postgresql/data
+    deploy:
+      placement:
+        constraints: [node.hostname == minion-3]
       
   coinmarketcap-producer:
     image: jahnestacado/coinmarketcap-producer
     environment:
-      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP:?HOST_IP must be set}:29092,${HOST_IP:?HOST_IP must be set}:39092
-      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP:?HOST_IP must be set}:8085
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP}:29092,${HOST_IP}:39092
+      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP}:8085
       CMC_COIN_IDS: "1,2,1831,1027,52"
 
   twitter-producer:
     image: jahnestacado/twitter-producer
     environment:
-      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP:?HOST_IP must be set}:29092,${HOST_IP:?HOST_IP must be set}:39092
-      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP:?HOST_IP must be set}:8085
+      KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${HOST_IP}:19092,${HOST_IP}:29092,${HOST_IP}:39092
+      KAFKA_PRODUCER_SCHEMA_REGISTRY_URL: http://${HOST_IP}:8085
       TWITTER_TRACKS: "bitcoin,BTC,etherium,ETH,ripple,XRP,litecoin,LTC,bitcoin-cash,BHC,cryptocurrency,crypto"
 
   postgresql-sink:
     image: jahnestacado/postgresql-sink
     depends_on:
-        - postgresql
+        - postgresql-master
     environment:
-      KAFKA_CONSUMER_BOOTSTRAP_SERVERS:${HOST_IP:?HOST_IP must be set}:19092,${HOST_IP:?HOST_IP must be set}:29092,${HOST_IP:?HOST_IP must be set}:39092
-      KAFKA_SCHEMA_REGISTRY_URL: http://${HOST_IP:?HOST_IP must be set}:8085
-      POSTGRESQL_HOST: postgresql
+      KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${HOST_IP}:19092,${HOST_IP}:29092,${HOST_IP}:39092
+      KAFKA_SCHEMA_REGISTRY_URL: http://${HOST_IP}:8085
+      POSTGRESQL_HOST: postgresql-master
       POSTGRESQL_PORT: 5432
     deploy:
       mode: replicated
