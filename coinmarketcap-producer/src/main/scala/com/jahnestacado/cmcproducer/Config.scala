@@ -35,7 +35,6 @@ class Config() {
     val cmcFeedSerializer = kafkaAvroSerializer.asInstanceOf[Serializer[CMCFeed]]
 
     ProducerSettings(akkaKafkaProducerConfig, new StringSerializer, cmcFeedSerializer)
-      .withBootstrapServers(kafkaProducerConfig.getString("bootstrapServers"))
   }
 
   val kafkaProducer = KafkaProducer(
