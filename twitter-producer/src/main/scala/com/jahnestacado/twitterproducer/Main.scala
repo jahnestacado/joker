@@ -15,13 +15,15 @@ object Main extends App with LazyLogging {
     implicit val system = ActorSystem("twitter-producer")
     implicit val mat = ActorMaterializer()
     val producerSourceQueue: SourceQueueWithComplete[RawTweet] = new ProducerSourceQueue(config).run()
-
     val keywords: List[String] = config.twitter.keywords
-    val client = TwitterStreamingClient()
-    client.filterStatuses(tracks = keywords, stall_warnings = true) {
+
+    val client: TwitterStreamingClient = TwitterStreamingClient()
+    client.filterStatuses(tracks = keywords, stall_warnings = true)({
       case tweet: RawTweet =>
-          producerSourceQueue.offer(tweet)
-    }
+        producerSourceQueue.offer(tweet)
+    }, {
+      case ex: Throwable => logger.error(ex.getMessage)
+    })
   }
 
 }
