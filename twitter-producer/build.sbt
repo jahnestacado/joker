@@ -18,9 +18,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream-kafka" % "1.0.3",
-  "com.danielasfregola" %% "twitter4s" % "5.5",
+  "com.danielasfregola" %% "twitter4s" % "6.1",
   "io.confluent" % "kafka-avro-serializer" % "5.2.1",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
 )
 
