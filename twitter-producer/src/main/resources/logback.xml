@@ -1,6 +1,7 @@
 <configuration>
     <variable name="LOGLEVEL_ROOT" value="${LOGLEVEL_ROOT:-INFO}" />
     <variable name="LOGLEVEL_KAFKA" value="${LOGLEVEL_KAFKA:-INFO}" />
+    <variable name="LOGLEVEL_AKKA" value="${LOGLEVEL_AKKA:-INFO}" />
 
     <!-- https://www.slf4j.org/legacy.html#jul-to-slf4j -->
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
@@ -18,4 +19,9 @@
     <logger name="org.apache.kafka" level="${LOGLEVEL_KAFKA}" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
+
+    <logger name="akka" level="${LOGLEVEL_AKKA}" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
 </configuration>
