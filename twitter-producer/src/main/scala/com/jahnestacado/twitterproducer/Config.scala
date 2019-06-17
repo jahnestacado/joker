@@ -7,6 +7,7 @@ import io.confluent.kafka.serializers.{AbstractKafkaAvroSerDeConfig, KafkaAvroSe
 import org.apache.kafka.common.serialization.{Serializer, StringSerializer}
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 class Config() {
   private val twitterConfig = ConfigFactory.load().getConfig("twitter")
@@ -23,7 +24,8 @@ class Config() {
   case class KafkaProducer(
                             settings: ProducerSettings[String, Tweet],
                             topic: String,
-                            sourceQueueBuffer: Int
+                            sourceQueueBuffer: Int,
+                            streamTimeout: FiniteDuration
                           )
 
   private[this] val akkaKafkaProducerConfig = ConfigFactory.load().getConfig("akka.kafka.producer")
@@ -42,6 +44,7 @@ class Config() {
     settings = producerSettings,
     topic = kafkaProducerConfig.getString("topic"),
     sourceQueueBuffer = kafkaProducerConfig.getInt("source-queue-buffer"),
+    streamTimeout = Duration.fromNanos(kafkaProducerConfig.getDuration("stream-timeout").toNanos)
   )
 
   val twitter = TwitterConfig(

@@ -1,20 +1,22 @@
 package com.jahnestacado.twitterproducer.kafka
 
-import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.kafka.scaladsl.Producer
 import akka.stream.scaladsl.{RestartSource, Source, SourceQueueWithComplete}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
+import akka.{Done, NotUsed}
 import com.danielasfregola.twitter4s.entities.{Tweet => RawTweet}
 import com.danielasfregola.twitter4s.{TwitterStreamingClient, entities}
 import com.jahnestacado.model.Tweet
 import com.jahnestacado.twitterproducer.Config
 import com.jahnestacado.twitterproducer.model.TweetToAvroMapper
 import org.apache.kafka.clients.producer.ProducerRecord
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
-class ProducerSource(config: Config)(implicit system: ActorSystem, mat: ActorMaterializer) {
-  private val kafkaProducerConfig = config.kafkaProducer
-  private val keywords: List[String] = config.twitter.keywords
+class ProducerStream private(config: Config)(implicit system: ActorSystem, mat: ActorMaterializer) {
+
+  import ProducerStream._
 
   private val sourceQueue: Source[ProducerRecord[String, Tweet], SourceQueueWithComplete[entities.Tweet]] =
     Source.queue(kafkaProducerConfig.sourceQueueBuffer, OverflowStrategy.dropHead)
@@ -27,7 +29,7 @@ class ProducerSource(config: Config)(implicit system: ActorSystem, mat: ActorMat
         // it will throw an exception which will cause the stream to resume
         validateAvroTweet(avroTweet)
 
-          println(tweet.id)
+        println(tweet.id)
         new ProducerRecord(kafkaProducerConfig.topic, avroTweet.id.toString, avroTweet)
       })
 
@@ -35,30 +37,37 @@ class ProducerSource(config: Config)(implicit system: ActorSystem, mat: ActorMat
     .valueSerializerOpt
     .foreach(tweetSerializer => tweetSerializer.serialize(kafkaProducerConfig.topic, tweet))
 
-  private def createSource() = {
-      val client: TwitterStreamingClient = TwitterStreamingClient()
-      val prematerializedSourceQueue: (SourceQueueWithComplete[RawTweet], Source[ProducerRecord[String, Tweet], NotUsed]) = sourceQueue
-        .idleTimeout(kafkaProducerConfig.streamTimeout)
-        .preMaterialize()
+  private def init() = {
+    val client: TwitterStreamingClient = TwitterStreamingClient()
+    val prematerializedSourceQueue: (SourceQueueWithComplete[RawTweet], Source[ProducerRecord[String, Tweet], NotUsed]) = sourceQueue
+      .idleTimeout(kafkaProducerConfig.streamTimeout)
+      .preMaterialize()
 
-     client.filterStatuses(tracks = keywords, stall_warnings = true)({
-        case tweet: RawTweet =>
-          prematerializedSourceQueue._1.offer(tweet)
-      }, {
-        case ex: Throwable =>
-          throw ex
-      })
+    client.filterStatuses(tracks = keywords, stall_warnings = true)({
+      case tweet: RawTweet =>
+        prematerializedSourceQueue._1.offer(tweet)
+    }, {
+      case ex: Throwable =>
+        throw ex
+    })
 
     prematerializedSourceQueue._2
   }
 
-  def run  = {
+}
+
+object ProducerStream {
+  val config: Config = new Config()
+  val kafkaProducerConfig = config.kafkaProducer
+  val keywords: List[String] = config.twitter.keywords
+
+  def run()(implicit system: ActorSystem, mat: ActorMaterializer): Future[Done] = {
     RestartSource.withBackoff(
       minBackoff = 3.seconds,
       maxBackoff = 30.seconds,
       randomFactor = 0.3
     ) { () =>
-      val producerStream: Source[ProducerRecord[String, Tweet], NotUsed] = new ProducerSource(config).create()
+      val producerStream: Source[ProducerRecord[String, Tweet], NotUsed] = new ProducerStream(config).init()
 
 
       producerStream
