@@ -4,5 +4,16 @@ export HOST_IP=`hostname -I | cut -d' ' -f 1`
 
 echo "Setting stack IP to $HOST_IP"
 
-docker stack deploy -c docker-stack-arm64v8.yml joker
+STACK_FILE="docker-stack-arm64v8.yml"
+while getopts "d" opt; do
+  case "$opt" in
+
+  d)  STACK_FILE="docker-stack.yml"
+      ;;
+
+  esac
+done
+
+
+docker stack deploy -c $STACK_FILE joker
 
